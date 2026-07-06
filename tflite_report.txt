@@ -1,0 +1,14 @@
+TFLite Accuracy: 99.49%
+
+              precision    recall  f1-score   support
+
+        Mode       1.00      1.00      1.00        64
+    Negative       0.98      1.00      0.99        79
+   Temp_down       1.00      1.00      1.00        64
+     Temp_up       1.00      1.00      1.00        63
+   ThumbDown       1.00      1.00      1.00        64
+     ThumbUp       1.00      0.96      0.98        56
+
+    accuracy                           0.99       390
+   macro avg       1.00      0.99      0.99       390
+weighted avg       0.99      0.99      0.99       390

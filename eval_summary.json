@@ -1,0 +1,16 @@
+{
+  "seq_len": 20,
+  "num_feats": 67,
+  "accuracy": 0.9948717948717949,
+  "precision_weighted": 0.9949984172206394,
+  "recall_weighted": 0.9948717948717949,
+  "f1_weighted": 0.9948572261072262,
+  "classes": [
+    "Mode",
+    "Negative",
+    "Temp_down",
+    "Temp_up",
+    "ThumbDown",
+    "ThumbUp"
+  ]
+}

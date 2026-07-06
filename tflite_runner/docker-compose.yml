@@ -1,0 +1,31 @@
+services:
+  gesture-tflite:
+    build: .
+    container_name: gesture-tflite
+    restart: unless-stopped
+    user: "1000:1000"
+    group_add:
+      - "44"
+    working_dir: /workspace/eksperimen
+    devices:
+      - "${HOST_VIDEO_DEVICE:-/dev/video0}:/dev/video0"
+    ipc: host
+    environment:
+      DISPLAY: "${DISPLAY:-:0}"
+      XAUTHORITY: "/home/pi/.Xauthority"
+      HOME: "/tmp"
+      MPLCONFIGDIR: "/tmp/matplotlib"
+      QT_X11_NO_MITSHM: "1"
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      TF_NUM_INTRAOP_THREADS: "3"
+      TF_NUM_INTEROP_THREADS: "1"
+      TF_ENABLE_ONEDNN_OPTS: "1"
+      BLYNK_AUTH_TOKEN: "-M8TAiPEyWX_im5nyzZUeoiV2ksid1CF"
+    volumes:
+      - ..:/workspace/eksperimen
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /home/pi/.Xauthority:/home/pi/.Xauthority:ro
+    command: ["python", "run_lstm_67fitur_tflite.py"]

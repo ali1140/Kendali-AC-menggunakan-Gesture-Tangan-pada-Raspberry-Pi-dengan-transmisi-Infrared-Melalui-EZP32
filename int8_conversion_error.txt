@@ -1,0 +1,42 @@
+Traceback (most recent call last):
+  File "c:\Users\aa807\Documents\percobaan_TA\Percobaan TA\eksperimen\export_to_tflite_int8_20frame.py", line 240, in main
+    convert_full_int8(model, x_train, output_int8, args.representative_limit)
+  File "c:\Users\aa807\Documents\percobaan_TA\Percobaan TA\eksperimen\export_to_tflite_int8_20frame.py", line 180, in convert_full_int8
+    tflite_model = converter.convert()
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\lite.py", line 1139, in wrapper
+    return self._convert_and_export_metrics(convert_func, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\lite.py", line 1093, in _convert_and_export_metrics
+    result = convert_func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\lite.py", line 1601, in convert
+    saved_model_convert_result = self._convert_as_saved_model()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\lite.py", line 1582, in _convert_as_saved_model
+    return super(TFLiteKerasModelConverterV2, self).convert(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\lite.py", line 1371, in convert
+    result = _convert_graphdef(
+             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\convert_phase.py", line 212, in wrapper
+    raise converter_error from None  # Re-throws the exception.
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\convert_phase.py", line 205, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\convert.py", line 984, in convert_graphdef
+    data = convert(
+           ^^^^^^^^
+  File "C:\Users\aa807\anaconda3\envs\gesture311\Lib\site-packages\tensorflow\lite\python\convert.py", line 366, in convert
+    raise converter_error
+tensorflow.lite.python.convert_phase.ConverterError: c:\Users\aa807\Documents\percobaan_TA\Percobaan TA\eksperimen\export_to_tflite_int8_20frame.py:323:1: error: 'tf.TensorListReserve' op requires element_shape to be static during TF Lite transformation pass
+    main()
+^
+<unknown>:0: note: loc(fused["StatefulPartitionedCall:", "StatefulPartitionedCall"]): called from
+c:\Users\aa807\Documents\percobaan_TA\Percobaan TA\eksperimen\export_to_tflite_int8_20frame.py:323:1: error: failed to legalize operation 'tf.TensorListReserve' that was explicitly marked illegal
+    main()
+^
+<unknown>:0: note: loc(fused["StatefulPartitionedCall:", "StatefulPartitionedCall"]): called from
+<unknown>:0: error: Lowering tensor list ops is failed. Please consider using Select TF ops and disabling `_experimental_lower_tensor_list_ops` flag in the TFLite converter object. For example, converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]\n converter._experimental_lower_tensor_list_ops = False
+
