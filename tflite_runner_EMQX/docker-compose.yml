@@ -1,0 +1,69 @@
+services:
+  gesture-tflite-emqx:
+    build: .
+    container_name: gesture-tflite-emqx
+    restart: unless-stopped
+    network_mode: host
+    user: "1000:1000"
+    group_add:
+      - "44"
+    working_dir: /workspace/eksperimen/tflite_runner_EMQX
+    devices:
+      - "${HOST_VIDEO_DEVICE:-/dev/video0}:/dev/video0"
+    ipc: host
+    environment:
+      DISPLAY: "${DISPLAY:-:0}"
+      XAUTHORITY: "/home/pi/.Xauthority"
+      HOME: "/tmp"
+      MPLCONFIGDIR: "/tmp/matplotlib"
+      QT_X11_NO_MITSHM: "1"
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      TF_NUM_INTRAOP_THREADS: "3"
+      TF_NUM_INTEROP_THREADS: "1"
+      TF_ENABLE_ONEDNN_OPTS: "1"
+      CAMERA_INDEX: "0"
+      ACTIVE_DEVICE_INDEX: "0"
+      DEVICE_TOPIC_CODE: "ESP32-AC01"
+      DEVICES_CONFIG_PATH: "/workspace/eksperimen/tflite_runner_EMQX/devices.json"
+      MQTT_SERVER: "c18fc82c.ala.eu-central-1.emqxsl.com"
+      MQTT_PORT: "8883"
+      MQTT_USER: "liali"
+      MQTT_PASS: "12345678"
+      MQTT_TLS_INSECURE: "0"
+      MQTT_QOS: "1"
+      COMMAND_COOLDOWN_SEC: "1.0"
+    volumes:
+      - ..:/workspace/eksperimen
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /home/pi/.Xauthority:/home/pi/.Xauthority:ro
+    command: ["python", "run_lstm_67fitur_tflite_emqx.py"]
+
+  emqx-config-web:
+    build: .
+    container_name: emqx-config-web
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    working_dir: /workspace/eksperimen/tflite_runner_EMQX
+    environment:
+      HOME: "/tmp"
+      DEVICES_CONFIG_PATH: "/workspace/eksperimen/tflite_runner_EMQX/devices.json"
+      CONFIG_WEB_PORT: "${CONFIG_WEB_PORT:-80}"
+      LOCAL_NAME: "gesture-ac"
+      ZEROCONF_ENABLED: "1"
+      ZEROCONF_NAME: "Gesture AC"
+      STA_IFACE: "${STA_IFACE:-wlan0}"
+      MQTT_SERVER: "c18fc82c.ala.eu-central-1.emqxsl.com"
+      MQTT_PORT: "8883"
+      MQTT_USER: "liali"
+      MQTT_PASS: "12345678"
+      MQTT_TLS_INSECURE: "0"
+      MQTT_QOS: "1"
+    volumes:
+      - ..:/workspace/eksperimen
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+      - /etc/NetworkManager/system-connections:/etc/NetworkManager/system-connections
+    command: ["python", "config_server.py"]

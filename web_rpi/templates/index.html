@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gesture AC Web</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="page">
+    <section class="layout">
+      <div class="panel video-panel">
+        <img id="video-feed" alt="Live inference">
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <h2>Status</h2>
+          <div class="status-grid">
+            <div class="stat">
+              <span>Prediksi</span>
+              <strong id="pred-label">-</strong>
+            </div>
+            <div class="stat">
+              <span>Confidence</span>
+              <strong id="pred-conf">-</strong>
+            </div>
+            <div class="stat">
+              <span>FPS</span>
+              <strong id="pred-fps">-</strong>
+            </div>
+            <div class="stat">
+              <span>Buffer</span>
+              <strong id="pred-buffer">-</strong>
+            </div>
+            <div class="stat">
+              <span>Model</span>
+              <strong id="model-state">-</strong>
+            </div>
+            {% if blynk_enabled %}
+            <div class="stat">
+              <span>Merk AC</span>
+              <strong id="ac-vendor">-</strong>
+            </div>
+            <div class="stat">
+              <span>Suhu AC</span>
+              <strong id="ac-temp">-</strong>
+            </div>
+            <div class="stat wide">
+              <span>AC Command</span>
+              <strong id="ac-command">-</strong>
+            </div>
+            <div class="stat wide">
+              <span>Blynk</span>
+              <strong id="blynk-status">-</strong>
+            </div>
+            {% endif %}
+            <div class="stat wide">
+              <span>Error</span>
+              <strong id="error-text">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Kontrol Model</h2>
+          <div class="button-grid">
+            <button class="action-btn" id="toggle-model-btn">Memuat...</button>
+          </div>
+          <p class="hint">Saat model dimatikan, MediaPipe tetap aktif dan landmark tetap digambar.</p>
+        </div>
+
+        {% if blynk_enabled %}
+        <div class="panel">
+          <h2>Manual Test</h2>
+          <div class="button-grid">
+            {% for action_key, label in actions.items() %}
+            <button class="action-btn" data-action="{{ action_key }}">{{ label }}</button>
+            {% endfor %}
+          </div>
+          <p class="hint">Tombol ini berguna untuk cek Blynk tanpa gesture.</p>
+        </div>
+        {% endif %}
+
+        <div class="panel">
+          <h2>Info Runtime</h2>
+          <ul class="info-list">
+            <li><span>Backend</span><strong id="runtime-backend">-</strong></li>
+            <li><span>Model</span><strong id="runtime-model">-</strong></li>
+            <li><span>Kamera</span><strong id="runtime-camera">-</strong></li>
+            <li><span>Kelas</span><strong id="runtime-classes">-</strong></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const FRAME_POLL_MS = {{ frame_poll_ms }};
+    const STATUS_POLL_MS = {{ status_poll_ms }};
+    const BLYNK_ENABLED = {{ 'true' if blynk_enabled else 'false' }};
+    let currentFrameUrl = null;
+
+    function scheduleNextFrame(delayMultiplier = 1) {
+      const delay = FRAME_POLL_MS > 0 ? FRAME_POLL_MS * delayMultiplier : 0;
+      if (delay > 0) {
+        setTimeout(refreshFrame, delay);
+      } else {
+        requestAnimationFrame(refreshFrame);
+      }
+    }
+
+    async function refreshStatus() {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const data = await response.json();
+
+        document.getElementById("pred-label").textContent = data.label;
+        document.getElementById("pred-conf").textContent = `${(data.confidence * 100).toFixed(1)}%`;
+        document.getElementById("pred-fps").textContent = data.fps.toFixed(1);
+        document.getElementById("pred-buffer").textContent = `${data.buffer}/45`;
+        document.getElementById("model-state").textContent = data.model_enabled ? "ON" : "OFF";
+        document.getElementById("toggle-model-btn").textContent = data.model_enabled ? "Matikan Model" : "Nyalakan Model";
+        if (BLYNK_ENABLED) {
+          document.getElementById("ac-vendor").textContent = data.blynk.vendor_name || "-";
+          document.getElementById("ac-temp").textContent = data.blynk.temperature ? `${data.blynk.temperature} C` : "-";
+          document.getElementById("ac-command").textContent = data.blynk.last_command || "-";
+          document.getElementById("blynk-status").textContent = data.blynk.last_status || "-";
+        }
+        document.getElementById("error-text").textContent = data.error || data.blynk.last_error || "-";
+        document.getElementById("runtime-backend").textContent = data.backend;
+        document.getElementById("runtime-model").textContent = data.model_path;
+        document.getElementById("runtime-camera").textContent = data.camera_index;
+        document.getElementById("runtime-classes").textContent = (data.classes || []).join(", ");
+      } catch (error) {
+        document.getElementById("error-text").textContent = "Gagal membaca status web";
+      }
+    }
+
+    async function refreshFrame() {
+      const img = document.getElementById("video-feed");
+
+      try {
+        const response = await fetch(`/api/frame?t=${Date.now()}`, { cache: "no-store" });
+        const blob = await response.blob();
+        const nextUrl = URL.createObjectURL(blob);
+
+        img.onload = () => {
+          if (currentFrameUrl) {
+            URL.revokeObjectURL(currentFrameUrl);
+          }
+          currentFrameUrl = nextUrl;
+          scheduleNextFrame();
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(nextUrl);
+          setTimeout(refreshFrame, 200);
+        };
+
+        img.src = nextUrl;
+      } catch (error) {
+        setTimeout(refreshFrame, 200);
+      }
+    }
+
+    async function toggleModel() {
+      const button = document.getElementById("toggle-model-btn");
+      button.disabled = true;
+
+      try {
+        const response = await fetch("/api/model/toggle", {
+          method: "POST"
+        });
+        const rawText = await response.text();
+        let data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch (error) {
+          data = { ok: false, message: rawText || `HTTP ${response.status}` };
+        }
+        if (!response.ok) {
+          document.getElementById("error-text").textContent = data.message || `HTTP ${response.status}`;
+          return;
+        }
+        if (!data.ok) {
+          document.getElementById("error-text").textContent = data.message || "Gagal mengubah status model";
+          return;
+        }
+        document.getElementById("error-text").textContent = "-";
+      } catch (error) {
+        document.getElementById("error-text").textContent = error.message || "Gagal mengubah status model";
+      } finally {
+        button.disabled = false;
+        await refreshStatus();
+      }
+    }
+
+    async function sendManual(actionKey) {
+      const response = await fetch(`/api/manual/${actionKey}`, {
+        method: "POST"
+      });
+      const data = await response.json();
+      if (!data.ok) {
+        document.getElementById("error-text").textContent = data.message || "Gagal kirim command";
+      }
+      await refreshStatus();
+    }
+
+    document.querySelectorAll(".action-btn").forEach((button) => {
+      if (button.dataset.action) {
+        button.addEventListener("click", () => sendManual(button.dataset.action));
+      }
+    });
+    document.getElementById("toggle-model-btn").addEventListener("click", toggleModel);
+
+    refreshStatus();
+    refreshFrame();
+    setInterval(refreshStatus, STATUS_POLL_MS);
+  </script>
+</body>
+</html>

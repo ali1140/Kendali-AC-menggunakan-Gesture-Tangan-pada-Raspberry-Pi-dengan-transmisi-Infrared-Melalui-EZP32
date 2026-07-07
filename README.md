@@ -21,8 +21,12 @@ Sistem ini memungkinkan pengguna mengendalikan AC secara *nirsentuh* (*touchless
 ---
 
 ## 🎥 Video Demo
-Silakan lihat aksi sistem ini pada video demo berikut:
-[Demo Video](assets/demo_video.mp4)
+
+**1. Demo Kontrol AC dengan Gesture Tangan:**
+[![Demo Kendali AC](https://img.youtube.com/vi/-WYMR4Sy4JI/0.jpg)](https://www.youtube.com/watch?v=-WYMR4Sy4JI)
+
+**2. Demo Konfigurasi Web Lokal (Raspberry Pi):**
+[![Demo Web Konfigurasi](https://img.youtube.com/vi/I4WsXCmSq5U/0.jpg)](https://www.youtube.com/watch?v=I4WsXCmSq5U)
 
 ---
 
@@ -43,18 +47,26 @@ Sistem mampu mengenali **6 kelas taksonomi gestur** secara dinamis:
   <img src="assets/img_page45_10.jpeg" width="600" alt="Arsitektur Perangkat Keras Sistem Kendali AC">
 </div>
 
-Sistem ini menggunakan arsitektur **Edge-IoT Terdistribusi** yang terbagi menjadi 2 zona:
+Sistem ini menggunakan arsitektur **Edge-IoT Terdistribusi** yang terbagi menjadi 2 zona utama:
 1. **Zona Pengguna (Vision & AI)**
    - **Perangkat:** Raspberry Pi 5 + Webcam.
    - **Fungsi:** Mengakuisisi video pada 30 FPS, mengekstraksi 21 titik sendi tangan menggunakan **Google MediaPipe**, dan merangkainya menjadi matriks sekuensial (20 frame x 67 fitur spasial). Matriks ini kemudian diproses oleh model LSTM berformat **TFLite** untuk memprediksi probabilitas gestur.
 2. **Zona Perangkat (Actuation & IoT)**
    - **Perangkat:** ESP32 D1 Mini + Custom IR Blaster.
-   - **Fungsi:** ESP32 berlangganan (subscribe) pada broker MQTT lokal (EMQX). Saat menerima *payload* JSON berisi hasil deteksi, ESP32 menerjemahkannya menggunakan pustaka `IRremoteESP8266` dan menembakkan sinyal inframerah ke arah AC.
+   - **Fungsi:** ESP32 berlangganan (subscribe) pada broker MQTT (EMQX). Saat menerima *payload* JSON berisi hasil deteksi, ESP32 menerjemahkannya menggunakan pustaka `IRremoteESP8266` dan menembakkan sinyal inframerah ke arah AC target.
+
+---
+
+## 🌐 Web Konfigurasi Lokal (Raspberry Pi)
+Sistem ini dilengkapi dengan antarmuka web lokal (`web_rpi`) yang berjalan langsung di atas Raspberry Pi. Fungsi dari antarmuka ini meliputi:
+- **Konfigurasi Awal WiFi:** Jika Raspberry Pi tidak terhubung ke internet, sistem akan memancarkan *Access Point* sendiri. Pengguna dapat memasukkan kredensial WiFi rumah melalui halaman web ini.
+- **Registrasi Perangkat AC:** Pengguna dapat mendaftarkan perangkat IR Blaster ESP32 yang terhubung di jaringan yang sama dengan menyimpannya ke dalam `devices.json`.
+- **Penggantian Merek Default:** Antarmuka web memungkinkan pergantian merek pabrikan AC (*Daiki, Panasonic, LG, Sharp, dll*) secara instan agar protokol IR menyesuaikan tanpa modifikasi kode.
 
 ---
 
 ## 🧠 Pipeline Machine Learning
-Model dirancang untuk menangkap dinamika waktu (temporal) dari sebuah gerakan, bukan sekadar bentuk tangan pasif. Pengenalan gestur dinamis sangat bergantung pada urutan gerakan frame demi frame. 
+Model dirancang untuk menangkap dinamika waktu (temporal) dari sebuah gerakan, bukan sekadar bentuk tangan pasif. Pengenalan gestur dinamis sangat bergantung pada urutan gerakan frame demi frame.
 
 <div align="center">
   <img src="assets/img_page58_15.jpeg" width="600" alt="Visualisasi Urutan Temporal Gestur Dinamis dari Frame 1 hingga Frame 20">
@@ -70,8 +82,8 @@ Model telah dilatih dan dikonversi dengan hasil yang sangat memuaskan, mempertah
 **Akurasi Pengujian: 99.49%**
 
 <div align="center">
-  <img src="confusion_matrix.png" width="400" alt="Confusion Matrix Model Keras">
-  <img src="tflite_confusion_matrix.png" width="400" alt="Confusion Matrix Model TFLite">
+  <img src="assets/confusion_matrix.png" width="400" alt="Confusion Matrix Model Keras">
+  <img src="assets/tflite_confusion_matrix.png" width="400" alt="Confusion Matrix Model TFLite">
   <br><i>(Kiri: Confusion Matrix Model Keras, Kanan: Confusion Matrix Model TFLite)</i>
 </div>
 
@@ -106,21 +118,24 @@ Dikarenakan pin GPIO ESP32 tidak mampu menggerakkan beberapa LED IR sekaligus, s
 
 ## 🚀 Instalasi & Menjalankan Sistem
 
-### Cara Menjalankan di Laptop (Tanpa EMQX / Cloud)
-Jika Anda hanya ingin menjalankan klasifikasi gestur di laptop secara lokal untuk pengujian model *Computer Vision* tanpa harus menyambungkannya ke *broker* MQTT/Blynk atau alat ESP32, Anda dapat mengikuti langkah-langkah berikut:
+### Cara Menjalankan di Laptop (Hanya Mode Komputer Visi / Tanpa EMQX)
+Jika Anda hanya ingin menjalankan klasifikasi gestur di laptop secara lokal untuk pengujian model *Computer Vision* tanpa harus menyambungkannya ke *broker* MQTT atau alat ESP32, Anda dapat mengikuti langkah-langkah berikut:
 
-1. Pastikan Anda memiliki Python terinstal di laptop Anda.
-2. Instal pustaka yang dibutuhkan:
+1. Pastikan Anda memiliki Python (versi 3.8+) terinstal di laptop Anda.
+2. Buat *Virtual Environment* dan instal pustaka yang dibutuhkan:
    ```bash
    pip install opencv-python mediapipe tensorflow numpy
    ```
 3. Buka terminal/command prompt di direktori repositori ini.
 4. Jalankan *script* inferensi model utama:
    ```bash
+   # Menjalankan inferensi model keras asli
+   python run_lstm_67fitur_keras.py
+   
+   # ATAU Menjalankan inferensi model tflite (lebih direkomendasikan)
    python run_lstm_67fitur_tflite.py
-   # atau untuk model Keras:
-   # python run_lstm_67fitur_keras.py
    ```
+   *(Catatan: Pastikan Anda menjalankan versi tanpa akhiran `_emqx.py` untuk mengabaikan fungsi MQTT).*
 5. Kamera laptop Anda akan menyala, dan Anda dapat langsung mempraktikkan gestur tangan di depan kamera. Prediksi kelas dan status akurasi akan muncul secara *real-time* di jendela *preview*.
 
 ---

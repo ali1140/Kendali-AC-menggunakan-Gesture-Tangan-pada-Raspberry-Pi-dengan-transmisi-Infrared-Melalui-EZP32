@@ -1,0 +1,28 @@
+services:
+  gesture-ac-web:
+    build: .
+    container_name: gesture-ac-web
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    devices:
+      - "/dev/video0:/dev/video0"
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "8000"
+      CAMERA_INDEX: "0"
+      CAMERA_BACKEND: "v4l2"
+      CAMERA_FOURCC: "MJPG"
+      CAPTURE_FPS: "30"
+      FRAME_POLL_MS: "0"
+      MODEL_PATH: "/app/models_20/gesture_lstm_20frame.tflite"
+      CLASSES_PATH: "/app/models_20/classes.json"
+      TFLITE_THREADS: "3"
+      GUNICORN_THREADS: "2"
+      OPENCV_THREADS: "1"
+      TF_INTRA_THREADS: "1"
+      TF_INTER_THREADS: "1"
+      BLYNK_ENABLED: "0"
+      BLYNK_AUTH_TOKEN: "-M8TAiPEyWX_im5nyzZUeoiV2ksid1CF"
+    volumes:
+      - ../models_20:/app/models_20:ro
