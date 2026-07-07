@@ -24,11 +24,19 @@ Sistem ini memungkinkan pengguna mengendalikan AC secara *nirsentuh* (*touchless
 
 **1. Demo Kontrol AC dengan Gesture Tangan:**
 
-https://github.com/ali1140/Kendali-AC-menggunakan-Gesture-Tangan-pada-Raspberry-Pi-dengan-transmisi-Infrared-Melalui-ESP32/raw/main/assets/demo_video.mp4
+
+
+https://github.com/user-attachments/assets/151e7fdf-b382-4754-98f4-d7a1545a1c7f
+
+
 
 **2. Demo Konfigurasi Web Lokal (Raspberry Pi):**
 
-https://github.com/ali1140/Kendali-AC-menggunakan-Gesture-Tangan-pada-Raspberry-Pi-dengan-transmisi-Infrared-Melalui-ESP32/raw/main/assets/demo_web.mp4
+
+
+https://github.com/user-attachments/assets/c203ac36-e5ac-411d-84dc-42918c862cb3
+
+
 
 ---
 
